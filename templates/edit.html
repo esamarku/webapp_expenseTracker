@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Edit Expense</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
 </head>
 <body>
     <div class="container mt-5">
@@ -11,20 +12,19 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-body">
-                        <h3 class="card-title text-center">Login</h3>
+                        <h3 class="card-title text-center">Edit Expense</h3>
                         <form method="post">
                             {{ form.hidden_tag() }}
                             <div class="form-group">
-                                {{ form.username.label(class="form-label") }}
-                                {{ form.username(class="form-control") }}
+                                {{ form.description.label(class="form-label") }}
+                                {{ form.description(class="form-control") }}
                             </div>
                             <div class="form-group">
-                                {{ form.password.label(class="form-label") }}
-                                {{ form.password(class="form-control") }}
+                                {{ form.amount.label(class="form-label") }}
+                                {{ form.amount(class="form-control") }}
                             </div>
                             <div class="text-center">
-                                <button type="submit" class="btn btn-success">Login</button>
-                                <button class="btn btn-primary" onclick="window.location.href='http://127.0.0.1:5000/register';">Create a new account</button>
+                                <button type="submit" class="btn btn-success">Update Expense</button>
                             </div>
                         </form>
                     </div>

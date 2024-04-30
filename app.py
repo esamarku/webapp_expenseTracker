@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy # type: ignore
 from flask_login import UserMixin, login_user, logout_user, current_user, login_required, LoginManager
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from wtforms import DecimalField, StringField, PasswordField, SubmitField, ValidationError
 from wtforms.validators import DataRequired, Length, EqualTo
 
 
@@ -34,22 +34,30 @@ class User(db.Model, UserMixin):
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
 
-
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     description = db.Column(db.String(100), nullable=False)
     amount = db.Column(db.Float, nullable=False)
 
+class ExpenseForm(FlaskForm):
+    description = StringField('Description', validators=[DataRequired()])
+    amount = DecimalField('Amount', validators=[DataRequired()])
+    submit = SubmitField('Update Expense')
+
 with app.app_context():
     db.create_all()
-
 
 #Login and register forms validation ===========================================================================================================
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6, max=40)])
+    password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('That username is already taken. Please choose a different one.')
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -98,13 +106,13 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        hashed_password = User.hash_password(form.password.data)
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         user = User(username=form.username.data, password_hash=hashed_password)
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created!', 'success')
+        flash('Registration successful! You can now log in.', 'success')
         return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
+    return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login(): #Check if user is already authenticated
@@ -120,6 +128,23 @@ def login(): #Check if user is already authenticated
         else:
             flash('Login Unsuccessful. Please check username and password', 'danger')
     return render_template('login.html', title='Login', form=form)
+
+@app.route('/edit/<int:expense_id>', methods=['GET', 'POST'])
+@login_required
+def edit_expense(expense_id):
+    expense = Expense.query.get_or_404(expense_id)
+    form = ExpenseForm()
+    if form.validate_on_submit():
+        expense.description = form.description.data
+        expense.amount = form.amount.data
+        db.session.commit()
+        flash('Your expense has been updated!', 'success')
+        return redirect(url_for('index'))
+    elif request.method == 'GET':
+        form.description.data = expense.description
+        form.amount.data = expense.amount
+    return render_template('edit.html', title='Edit Expense', form=form, expense_id=expense_id)
+
 
 #Quite self-explanatory what this does
 @app.route('/logout')
