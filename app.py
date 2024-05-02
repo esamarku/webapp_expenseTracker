@@ -139,7 +139,7 @@ def edit_expense(expense_id):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('login'))
     form = RegistrationForm()
 
     #If form data is valid, create password hash and submit data to database
