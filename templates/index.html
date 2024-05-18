@@ -4,22 +4,66 @@
     <meta charset="UTF-8">
     <title>Expense Tracker</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 </head>
 <body>
     <h1>Expense Tracker</h1>
     <div>
         <button class="btn btn-danger" style="float: right;" onclick="window.location.href='http://127.0.0.1:5000/logout';">Log out</button>
     </div>
-    <form action="/add" method="post" style=padding:20px>
-        <input type="text" name="description" placeholder="Description" required>
-        <input type="number" name="amount" step="0.01" placeholder="Amount" required>
-        <button type="submit" class="btn btn-success">Add Expense</button>
-    </form>
+    <div>
+        <p>
+            <strong>
+            Welcome to the Expense tracker application! For a brief introduction:
+                <ul>
+                    <li>1. Enter the description of the expense in the form below</li>
+                    <li>2. Add the price of the expense</li>
+                    <li>3. Enter the category in which the expense belongs. In case the application finds 2 or more existing entries with the same description, the application will automatically suggest a category for you!</li>
+                    In case you want to change the suggested category, just write a new one in place of the suggested category.
+                    <li>4. If you need to edit or remove records, you can do so by clicking the buttons next to the expense!</li>
+                    <li>5. The logout button is located in the upper right corner</li>
+                </ul>
+            </strong>
+        </p>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <strong>Add a New Expense</strong>
+        </div>
+        <div class="card-body">
+            <form action="/add" method="post" class="form-inline">
+                {{ form.hidden_tag() }}
+                <div class="form-group mb-2 mr-2">
+                    {{ form.description.label(class="sr-only") }}
+                    {{ form.description(class="form-control", placeholder="Description") }}
+                </div>
+                <div class="form-group mb-2 mr-2">
+                    {{ form.amount.label(class="sr-only") }}
+                    {{ form.amount(class="form-control", placeholder="Amount") }}
+                </div>
+                <div class="form-group mb-2 mr-2">
+                    {{ form.category.label(class="sr-only") }}
+                    {{ form.category(class="form-control", placeholder="Category") }}
+                </div>
+                <button type="submit" class="btn btn-success mb-2">Add Expense</button>
+            </form>
+            <!-- Display flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    <!--The table for the expenses-->
     <table class="table table-striped table-hover">
         <thead class="thead-dark">
             <tr>
                 <th>Description</th>
                 <th>Amount</th>
+                <th>Category</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -28,6 +72,7 @@
             <tr>
                 <td>{{ expense.description }}</td>
                 <td>${{ expense.amount }}</td>
+                <td>{{ expense.category }}</td>
                 <td>
                     <a href="{{ url_for('edit_expense', expense_id=expense.id) }}" class="btn btn-primary">Edit</a>
                     <a href="/delete/{{ expense.id }}" class="btn btn-danger">Delete</a>
@@ -36,5 +81,23 @@
             {% endfor %}
         </tbody>
     </table>
-    </body>
+    <!--This script is used for the automatic categorization function after the user has entered the description-->
+    <script>
+        $(document).ready(function() {
+            $('#description').on('input', function() {
+                let description = $(this).val();
+                if (description.length > 0) {
+                    $.ajax({
+                        url: '/suggest_category',
+                        type: 'POST',
+                        data: { description: description },
+                        success: function(category) {
+                            $('#category').val(category);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
 </html>

@@ -5,7 +5,6 @@
     <title>Edit Expense</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
-</head>
 <body>
     <div class="container mt-5">
         <div class="row justify-content-center">
@@ -22,6 +21,10 @@
                             <div class="form-group">
                                 {{ form.amount.label(class="form-label") }}
                                 {{ form.amount(class="form-control") }}
+                            </div>
+                            <div class="form-group">
+                                {{ form.category.label(class="form-label") }}
+                                {{ form.category(class="form-control") }}
                             </div>
                             <div class="text-center">
                                 <button type="submit" class="btn btn-success">Update Expense</button>
